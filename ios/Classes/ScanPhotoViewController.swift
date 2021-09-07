@@ -12,13 +12,6 @@ import Foundation
 class ScanPhotoViewController: UIViewController, ImageScannerControllerDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
 
     var _result:FlutterResult?
-    
-    private func selectPhoto() {
-        let imagePicker = UIImagePickerController()
-        imagePicker.delegate = self
-        imagePicker.sourceType = .photoLibrary
-        present(imagePicker, animated: true)
-    }
 
     public func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
         picker.dismiss(animated: true)
@@ -33,13 +26,21 @@ class ScanPhotoViewController: UIViewController, ImageScannerControllerDelegate,
         guard let image = info[.originalImage] as? UIImage else { return }
         let scannerVC = ImageScannerController(image: image)
         scannerVC.imageScannerDelegate = self
+        if #available(iOS 13.0, *) {
+            scannerVC.isModalInPresentation = true
+        }
         present(scannerVC, animated: true)
     }
 
     override func viewDidAppear(_ animated: Bool) {
 
         if self.isBeingPresented {
-            selectPhoto()
+            let imagePicker = UIImagePickerController()
+            imagePicker.delegate = self
+            imagePicker.sourceType = .photoLibrary
+            imagePicker.modalPresentationStyle = .fullScreen
+            
+            present(imagePicker, animated: true)
         }
     }
 
