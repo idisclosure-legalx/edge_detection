@@ -17,11 +17,10 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    initPlatformState();
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
+  Future<void> scan() async {
     String imagePath;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
@@ -47,8 +46,18 @@ class _MyAppState extends State<MyApp> {
         appBar: new AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: new Center(
-          child: new Text('Cropped image path: $_imagePath\n'),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              new Text('Cropped image path: $_imagePath\n'),
+              TextButton(
+                onPressed: scan,
+                child: Text("Scan"),
+              ),
+            ],
+          ),
         ),
       ),
     );

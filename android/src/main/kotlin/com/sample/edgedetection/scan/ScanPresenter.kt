@@ -9,7 +9,6 @@ import android.graphics.Point
 import android.graphics.Rect
 import android.graphics.YuvImage
 import android.hardware.Camera
-import android.media.MediaActionSound
 import android.os.Build
 import android.util.Log
 import android.view.SurfaceHolder
@@ -65,7 +64,6 @@ class ScanPresenter constructor(private val context: Context, private val iView:
         mCamera?.autoFocus { b, _ ->
             Log.i(TAG, "focus result: " + b)
             mCamera?.takePicture(null, null, this)
-            MediaActionSound().play(MediaActionSound.SHUTTER_CLICK)
         }
     }
 
@@ -140,6 +138,13 @@ class ScanPresenter constructor(private val context: Context, private val iView:
         mCamera?.setDisplayOrientation(90)
     }
 
+    fun detectEdge(pic: Mat) {
+        SourceManager.corners = processPicture(pic)
+        Imgproc.cvtColor(pic, pic, Imgproc.COLOR_RGB2BGRA)
+        SourceManager.pic = pic
+        (context as Activity)?.startActivityForResult(Intent(context, CropActivity::class.java),REQUEST_CODE)
+    }
+
     override fun surfaceCreated(p0: SurfaceHolder?) {
         initCamera()
     }
@@ -170,15 +175,11 @@ class ScanPresenter constructor(private val context: Context, private val iView:
                     val pic = Imgcodecs.imdecode(mat, Imgcodecs.CV_LOAD_IMAGE_UNCHANGED)
                     Core.rotate(pic, pic, Core.ROTATE_90_CLOCKWISE)
                     mat.release()
-                    SourceManager.corners = processPicture(pic)
-                    Imgproc.cvtColor(pic, pic, Imgproc.COLOR_RGB2BGRA)
-                    SourceManager.pic = pic
 
-                    (context as Activity)?.startActivityForResult(Intent(context, CropActivity::class.java),REQUEST_CODE)
+                    detectEdge(pic);
                     busy = false
                 }
     }
-
 
     override fun onPreviewFrame(p0: ByteArray?, p1: Camera?) {
         if (busy) {
@@ -229,7 +230,17 @@ class ScanPresenter constructor(private val context: Context, private val iView:
 
     }
 
-    private fun getMaxResolution(): Camera.Size? = mCamera?.parameters?.supportedPreviewSizes?.maxBy { it.width }
+    private fun getMaxResolution(): Camera.Size? = mCamera?.parameters?.supportedPreviewSizes?.maxWith(object: Comparator<Camera.Size?> {
+        override fun compare(p1: Camera.Size?, p2: Camera.Size?): Int = when {
+            p1!!.width > p2!!.width -> 1
+            p1.width == p2.width -> when {
+                p1.height > p2.height -> 1
+                p1.height == p2.height -> 0
+                else -> -1
+            }
+            else -> -1
+        }
+    })
 
 
 }

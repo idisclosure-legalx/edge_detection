@@ -17,6 +17,12 @@ class CropActivity : BaseActivity(), ICropView.Proxy {
     private lateinit var mPresenter: CropPresenter
 
     override fun prepare() {
+        proceed.setOnClickListener {
+            var path = mPresenter.proceed()
+            setResult(Activity.RESULT_OK, Intent().putExtra(SCANNED_RESULT, path))
+            System.gc()
+            finish()
+        }
     }
 
     override fun provideContentViewId(): Int = R.layout.activity_crop
@@ -32,34 +38,4 @@ class CropActivity : BaseActivity(), ICropView.Proxy {
 
     override fun getCroppedPaper(): ImageView = picture_cropped
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.crop_activity_menu, menu)
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    // handle button activities
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-
-        if(item.itemId == android.R.id.home){
-            onBackPressed()
-            return true
-        }
-
-        if (item.itemId == R.id.action_label) {
-            if(item.title == applicationContext.getString(R.string.next)){
-                item.title = "Done"
-                mPresenter.crop()
-                return true
-            }
-            if(item.title == applicationContext.getString(R.string.done)){
-                var path = mPresenter.save()
-                setResult(Activity.RESULT_OK, Intent().putExtra(SCANNED_RESULT, path))
-                System.gc()
-                finish()
-            return true
-        }
-        }
-
-        return super.onOptionsItemSelected(item)
-    }
 }
