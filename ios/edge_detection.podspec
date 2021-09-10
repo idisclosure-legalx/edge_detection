@@ -12,11 +12,14 @@ Plugin to detect edges of objects
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Your Company' => 'email@example.com' }
   s.resources        = 'Assets/**/*'
-  s.source           = { :path => '.' }
+  s.source           = { :path => '.', :submodules => true }
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
-  s.dependency 'WeScan'
+  s.subspec 'WeScan' do |ss|
+    ss.source_files = 'WeScan/WeScan/**/*.{h,m,swift}'
+    ss.resources = 'WeScan/WeScan/**/*.{strings,png}'
+  end
   s.swift_version = '4.2'
   s.ios.deployment_target = '10.0'
 end
