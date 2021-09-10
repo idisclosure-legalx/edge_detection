@@ -12,7 +12,7 @@ Plugin to detect edges of objects
   s.license          = { :file => '../LICENSE' }
   s.author           = { 'Your Company' => 'email@example.com' }
   s.resources        = 'Assets/**/*'
-  s.source           = { :path => '.', :submodules => true }
+  s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
