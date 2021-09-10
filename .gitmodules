@@ -1,0 +1,4 @@
+[submodule "ios/WeScan"]
+	path = ios/WeScan
+	url = https://github.com/henryleunghk/WeScan.git
+	branch = feature/scan-or-select
