@@ -109,8 +109,8 @@ private fun getCorners(contours: ArrayList<MatOfPoint>, size: Size): Corners? {
             val points = approx.toArray().asList()
             // select biggest 4 angles polygon
             if (points.size == 4) {
-                val foundPoints = sortPoints(points)
-                return Corners(foundPoints, size)
+                if (groupPoints(points).size < 4) return null
+                return Corners(points, size)
             }
         } else {
             return null
@@ -120,13 +120,13 @@ private fun getCorners(contours: ArrayList<MatOfPoint>, size: Size): Corners? {
     return null
 }
 
-private fun sortPoints(points: List<Point>): List<Point> {
+private fun groupPoints(points: List<Point>): List<Point> {
     val p0 = points.minBy { point -> point.x + point.y } ?: Point()
     val p1 = points.maxBy { point -> point.x - point.y } ?: Point()
     val p2 = points.maxBy { point -> point.x + point.y } ?: Point()
     val p3 = points.minBy { point -> point.x - point.y } ?: Point()
 
-    return listOf(p0, p1, p2, p3)
+    return listOf(p0, p1, p2, p3).distinct()
 }
 
 private fun insideArea(rp: List<Point>, size: Size): Boolean {
