@@ -62,7 +62,7 @@ final class ReviewViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        enhancedImageIsAvailable = results.enhancedScan != nil
+        // enhancedImageIsAvailable = results.enhancedScan != nil
         
         setupViews()
         setupToolbar()
