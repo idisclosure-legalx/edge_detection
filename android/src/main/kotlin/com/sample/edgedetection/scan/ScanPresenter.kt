@@ -13,7 +13,7 @@ import android.os.Build
 import android.util.Log
 import android.view.SurfaceHolder
 import android.widget.Toast
-import com.sample.edgedetection.REQUEST_CODE
+import com.sample.edgedetection.SCAN_REQUEST_CODE
 import com.sample.edgedetection.SourceManager
 import com.sample.edgedetection.crop.CropActivity
 import com.sample.edgedetection.processor.Corners
@@ -142,7 +142,7 @@ class ScanPresenter constructor(private val context: Context, private val iView:
         SourceManager.corners = processPicture(pic)
         Imgproc.cvtColor(pic, pic, Imgproc.COLOR_RGB2BGRA)
         SourceManager.pic = pic
-        (context as Activity)?.startActivityForResult(Intent(context, CropActivity::class.java),REQUEST_CODE)
+        (context as Activity)?.startActivityForResult(Intent(context, CropActivity::class.java),SCAN_REQUEST_CODE)
     }
 
     override fun surfaceCreated(p0: SurfaceHolder?) {

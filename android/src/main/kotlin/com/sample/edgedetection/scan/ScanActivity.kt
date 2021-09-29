@@ -14,9 +14,7 @@ import android.view.SurfaceView
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.sample.edgedetection.R
-import com.sample.edgedetection.REQUEST_CODE
-import com.sample.edgedetection.SCANNED_RESULT
+import com.sample.edgedetection.*
 import com.sample.edgedetection.base.BaseActivity
 import com.sample.edgedetection.view.PaperRectangle
 
@@ -64,7 +62,7 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
 
         gallery.setOnClickListener {
             val gallery = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
-            ActivityCompat.startActivityForResult(this, gallery, 1, null);
+            ActivityCompat.startActivityForResult(this, gallery, PICK_IMAGE_REQUEST_CODE, null);
         };
     }
 
@@ -102,17 +100,29 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == REQUEST_CODE) {
+        if (requestCode == SCAN_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 if (null != data && null != data.extras) {
-                    val path = data.extras!!.getString(SCANNED_RESULT)
-                    setResult(Activity.RESULT_OK, Intent().putExtra(SCANNED_RESULT, path))
+                    val croppedImagePath = data.extras!!.getString(CROPPED_IMAGE_PATH)
+                    val originalImagePath = data.extras!!.getString(ORIGINAL_IMAGE_PATH)
+                    val quadTL = data.extras!!.getDoubleArray(QUADRILATERAL_TOP_LEFT)
+                    val quadTR = data.extras!!.getDoubleArray(QUADRILATERAL_TOP_RIGHT)
+                    val quadBR = data.extras!!.getDoubleArray(QUADRILATERAL_BOTTOM_RIGHT)
+                    val quadBL = data.extras!!.getDoubleArray(QUADRILATERAL_BOTTOM_LEFT)
+                    var intent = Intent()
+                    intent.putExtra(CROPPED_IMAGE_PATH, croppedImagePath)
+                    intent.putExtra(ORIGINAL_IMAGE_PATH, originalImagePath)
+                    intent.putExtra(QUADRILATERAL_TOP_LEFT, quadTL)
+                    intent.putExtra(QUADRILATERAL_TOP_RIGHT, quadTR)
+                    intent.putExtra(QUADRILATERAL_BOTTOM_RIGHT, quadBR)
+                    intent.putExtra(QUADRILATERAL_BOTTOM_LEFT, quadBL)
+                    setResult(Activity.RESULT_OK, intent)
                     finish()
                 }
             }
         }
 
-        if (requestCode == 1 && resultCode == Activity.RESULT_OK) {
+        if (requestCode == PICK_IMAGE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
             val uri: Uri = data!!.data
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 onImageSelected(uri)

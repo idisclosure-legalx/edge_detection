@@ -92,10 +92,10 @@ class PaperRectangle : View {
             layoutHeight = (size.height / size.width * layoutWidth).toInt()
         }
         cropMode = true
-        tl = corners?.corners?.get(0) ?: Point(size.width * 0.1, size.height * 0.1)
-        tr = corners?.corners?.get(1) ?: Point(size.width * 0.9, size.height * 0.1)
-        br = corners?.corners?.get(2) ?: Point(size.width * 0.9, size.height * 0.9)
-        bl = corners?.corners?.get(3) ?: Point(size.width * 0.1, size.height * 0.9)
+        tl = corners?.corners?.get(0) ?: Point(size.width * 0.05, size.height * 0.05)
+        tr = corners?.corners?.get(1) ?: Point(size.width * 0.95, size.height * 0.05)
+        br = corners?.corners?.get(2) ?: Point(size.width * 0.95, size.height * 0.95)
+        bl = corners?.corners?.get(3) ?: Point(size.width * 0.05, size.height * 0.95)
 
 
         ratioX = size.width.div(layoutWidth)

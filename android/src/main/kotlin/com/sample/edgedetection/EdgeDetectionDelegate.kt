@@ -16,11 +16,23 @@ class EdgeDetectionDelegate(activity: Activity) : PluginRegistry.ActivityResultL
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
 
-        if (requestCode == REQUEST_CODE) {
+        if (requestCode == SCAN_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
                 if (null != data && null != data.extras) {
-                    val filePath = data.extras!!.getString(SCANNED_RESULT)
-                    finishWithSuccess(filePath)
+                    val croppedImagePath = data.extras!!.getString(CROPPED_IMAGE_PATH)
+                    val originalImagePath = data.extras!!.getString(ORIGINAL_IMAGE_PATH)
+                    val quadTL = data.extras!!.getDoubleArray(QUADRILATERAL_TOP_LEFT)
+                    val quadTR = data.extras!!.getDoubleArray(QUADRILATERAL_TOP_RIGHT)
+                    val quadBR = data.extras!!.getDoubleArray(QUADRILATERAL_BOTTOM_RIGHT)
+                    val quadBL = data.extras!!.getDoubleArray(QUADRILATERAL_BOTTOM_LEFT)
+                    finishWithSuccess(mapOf(
+                            CROPPED_IMAGE_PATH to croppedImagePath,
+                            ORIGINAL_IMAGE_PATH to originalImagePath,
+                            QUADRILATERAL_TOP_LEFT to quadTL,
+                            QUADRILATERAL_TOP_RIGHT to quadTR,
+                            QUADRILATERAL_BOTTOM_RIGHT to quadBR,
+                            QUADRILATERAL_BOTTOM_LEFT to quadBL
+                    ))
                 }
             } else if (resultCode == Activity.RESULT_CANCELED) {
                     finishWithSuccess(null)
@@ -39,7 +51,7 @@ class EdgeDetectionDelegate(activity: Activity) : PluginRegistry.ActivityResultL
         }
 
         var intent = Intent(Intent(activity.applicationContext, ScanActivity::class.java))
-        activity.startActivityForResult(intent,REQUEST_CODE)
+        activity.startActivityForResult(intent,SCAN_REQUEST_CODE)
     }
 
     private fun setPendingMethodCallAndResult(methodCall: MethodCall, result: MethodChannel.Result): Boolean {
@@ -61,8 +73,8 @@ class EdgeDetectionDelegate(activity: Activity) : PluginRegistry.ActivityResultL
         clearMethodCallAndResult()
     }
 
-    private fun finishWithSuccess(imagePath: String?) {
-        result?.success(imagePath)
+    private fun finishWithSuccess(data: Map<String, Any>?) {
+        result?.success(data)
         clearMethodCallAndResult()
     }
 
