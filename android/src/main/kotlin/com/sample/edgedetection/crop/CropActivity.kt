@@ -2,14 +2,14 @@ package com.sample.edgedetection.crop
 
 import android.app.Activity
 import android.content.Intent
+import android.content.res.TypedArray
 import android.widget.ImageView
-import com.sample.edgedetection.R
 import com.sample.edgedetection.base.BaseActivity
 import com.sample.edgedetection.view.PaperRectangle
 import kotlinx.android.synthetic.main.activity_crop.*
 import android.view.MenuItem
 import android.view.Menu
-import com.sample.edgedetection.SCANNED_RESULT
+import com.sample.edgedetection.*
 
 
 class CropActivity : BaseActivity(), ICropView.Proxy {
@@ -18,8 +18,17 @@ class CropActivity : BaseActivity(), ICropView.Proxy {
 
     override fun prepare() {
         proceed.setOnClickListener {
-            var path = mPresenter.proceed()
-            setResult(Activity.RESULT_OK, Intent().putExtra(SCANNED_RESULT, path))
+            var data = mPresenter.proceed()
+            val quad = data!![QUADRILATERAL] as Array<DoubleArray>
+            var intent = Intent()
+            intent.putExtra(CROPPED_IMAGE_PATH, data!![CROPPED_IMAGE_PATH] as String)
+            intent.putExtra(ORIGINAL_IMAGE_PATH, data!![ORIGINAL_IMAGE_PATH] as String)
+            intent.putExtra(QUADRILATERAL_TOP_LEFT, quad[0])
+            intent.putExtra(QUADRILATERAL_TOP_RIGHT, quad[1])
+            intent.putExtra(QUADRILATERAL_BOTTOM_RIGHT, quad[2])
+            intent.putExtra(QUADRILATERAL_BOTTOM_LEFT, quad[3])
+            setResult(Activity.RESULT_OK, intent)
+
             System.gc()
             finish()
         }

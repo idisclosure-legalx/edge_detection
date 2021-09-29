@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 
@@ -12,7 +14,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _imagePath = 'Unknown';
+  String _croppedImagePath = 'Unknown';
+  String _originalImagePath = 'Unknown';
+  List<Point<double>> _quadrilateral = [];
 
   @override
   void initState() {
@@ -21,22 +25,28 @@ class _MyAppState extends State<MyApp> {
 
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> scan() async {
-    String imagePath;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
-      imagePath = await EdgeDetection.detectEdge;
+      final data = await EdgeDetection.detectEdge;
+      if (data == null) return;
+      _croppedImagePath = data.croppedImagePath;
+      _originalImagePath = data.originalImagePath;
+      _quadrilateral = [
+        data.quadrilateral.topLeft,
+        data.quadrilateral.topRight,
+        data.quadrilateral.bottomRight,
+        data.quadrilateral.bottomLeft,
+      ];
+
+      // If the widget was removed from the tree while the asynchronous platform
+      // message was in flight, we want to discard the reply rather than calling
+      // setState to update our non-existent appearance.
+      if (!mounted) return;
+
+      setState(() {});
     } on PlatformException {
-      imagePath = 'Failed to get cropped image path.';
+      _croppedImagePath = 'Failed to get cropped image path.';
     }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _imagePath = imagePath;
-    });
   }
 
   @override
@@ -46,15 +56,29 @@ class _MyAppState extends State<MyApp> {
         appBar: new AppBar(
           title: const Text('Plugin example app'),
         ),
-        body: Center(
+        body: Padding(
+          padding: EdgeInsets.all(16),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              new Text('Cropped image path: $_imagePath\n'),
-              TextButton(
-                onPressed: scan,
-                child: Text("Scan"),
+              Text('Cropped image path:'),
+              Text(_croppedImagePath),
+              Container(height: 8),
+              Text('Original image path:'),
+              Text(_originalImagePath),
+              Container(height: 8),
+              Text('Quadrilateral:'),
+              Text(_quadrilateral.toString()),
+              Container(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextButton(
+                    onPressed: scan,
+                    child: Text("Scan"),
+                  ),
+                ],
               ),
             ],
           ),

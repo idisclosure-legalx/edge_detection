@@ -3,7 +3,6 @@ package com.sample.edgedetection.crop
 import android.Manifest
 import android.content.Context
 import android.graphics.Bitmap
-import android.os.Environment
 import android.os.SystemClock
 import com.sample.edgedetection.SourceManager
 import com.sample.edgedetection.processor.Corners
@@ -16,12 +15,16 @@ import java.io.FileOutputStream
 import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import com.sample.edgedetection.CROPPED_IMAGE_PATH
+import com.sample.edgedetection.ORIGINAL_IMAGE_PATH
+import com.sample.edgedetection.QUADRILATERAL
 
 
 const val IMAGES_DIR = "smart_scanner"
 
 class CropPresenter(val context: Context, private val iCropView: ICropView.Proxy) {
     private val picture: Mat? = SourceManager.pic
+    private var pictureBitmap: Bitmap? = null
 
     private val corners: Corners? = SourceManager.corners
     private var croppedPicture: Mat? = null
@@ -35,13 +38,17 @@ class CropPresenter(val context: Context, private val iCropView: ICropView.Proxy
         iCropView.getPaperRect().onCorners2Crop(corners, picture?.size())
     }
 
-    fun proceed(): String? {
+    fun proceed(): Map<String, Any>? {
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             Toast.makeText(context, "please grant write file permission and trya gain", Toast.LENGTH_SHORT).show()
             return null
         }
 
-        croppedPicture = cropPicture(picture!!, iCropView.getPaperRect().getCorners2Crop())
+        pictureBitmap = Bitmap.createBitmap(picture!!.width(), picture!!.height(), Bitmap.Config.ARGB_8888)
+        Utils.matToBitmap(picture, pictureBitmap)
+
+        val cornerPoints = iCropView.getPaperRect().getCorners2Crop()
+        croppedPicture = cropPicture(picture!!, cornerPoints)
         croppedBitmap = Bitmap.createBitmap(croppedPicture!!.width(), croppedPicture!!.height(), Bitmap.Config.ARGB_8888)
         Utils.matToBitmap(croppedPicture, croppedBitmap)
 
@@ -51,6 +58,7 @@ class CropPresenter(val context: Context, private val iCropView: ICropView.Proxy
         }
 
         val cropPic = croppedBitmap
+        var croppedImagePath = ""
         if (null != cropPic) {
             val file = File.createTempFile("crop_${SystemClock.currentThreadTimeMillis()}", ".jpeg", dir)
             file.deleteOnExit()
@@ -60,9 +68,27 @@ class CropPresenter(val context: Context, private val iCropView: ICropView.Proxy
             outStream.close()
             cropPic.recycle()
 
-            return file.absolutePath
+            croppedImagePath = file.absolutePath
         }
 
-        return null
+        val origPic = pictureBitmap
+        var originalImagePath = ""
+        if (null != cropPic) {
+            val file = File.createTempFile("orig_${SystemClock.currentThreadTimeMillis()}", ".jpeg", dir)
+            file.deleteOnExit()
+            val outStream = FileOutputStream(file)
+            origPic!!.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
+            outStream.flush()
+            outStream.close()
+            origPic!!.recycle()
+
+            originalImagePath = file.absolutePath
+        }
+
+        return mapOf(
+                CROPPED_IMAGE_PATH to croppedImagePath,
+                ORIGINAL_IMAGE_PATH to originalImagePath,
+                QUADRILATERAL to cornerPoints.map { point -> arrayOf(point.x, point.y).toDoubleArray() }.toTypedArray()
+        )
     }
 }
