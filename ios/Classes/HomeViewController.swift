@@ -26,8 +26,16 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
         // Your ViewController is responsible for dismissing the ImageScannerController
         scanner.dismiss(animated: true)
         
-        let imagePath = saveImage(image:results.croppedScan.image)
-        _result!(imagePath)
+        let croppedImagePath = saveImage(image:results.croppedScan.image)
+        let originalImagePath = saveImage(image: results.originalScan.image)
+        _result!([
+            "cropped_image_path": croppedImagePath!,
+            "original_image_path": originalImagePath!,
+            "quadrilateral_top_left": [results.detectedRectangle.topLeft.x, results.detectedRectangle.topLeft.y],
+            "quadrilateral_top_right": [results.detectedRectangle.topRight.x, results.detectedRectangle.topRight.y],
+            "quadrilateral_bottom_right": [results.detectedRectangle.bottomRight.x, results.detectedRectangle.bottomRight.y],
+            "quadrilateral_bottom_left": [results.detectedRectangle.bottomLeft.x, results.detectedRectangle.bottomLeft.y]
+        ])
         self.dismiss(animated: true)
     }
     
@@ -44,7 +52,7 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
         guard let data = image.jpegData(compressionQuality: 1) ?? image.pngData() else {
             return nil
         }
-        guard let directory = try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false) as NSURL else {
+        guard let directory = try? FileManager.default.url(for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: false) as NSURL else {
             return nil
         }
         let fileName = randomString(length:10);
