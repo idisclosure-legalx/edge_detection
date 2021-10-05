@@ -108,10 +108,10 @@ final class ReviewViewController: UIViewController {
         var imageViewConstraints: [NSLayoutConstraint] = []
         if #available(iOS 11.0, *) {
             imageViewConstraints = [
-                view.safeAreaLayoutGuide.topAnchor.constraint(equalTo: imageView.safeAreaLayoutGuide.topAnchor),
-                view.safeAreaLayoutGuide.trailingAnchor.constraint(equalTo: imageView.safeAreaLayoutGuide.trailingAnchor),
-                view.safeAreaLayoutGuide.bottomAnchor.constraint(equalTo: imageView.safeAreaLayoutGuide.bottomAnchor),
-                view.safeAreaLayoutGuide.leadingAnchor.constraint(equalTo: imageView.safeAreaLayoutGuide.leadingAnchor)
+                view.topAnchor.constraint(equalTo: imageView.safeAreaLayoutGuide.topAnchor),
+                view.trailingAnchor.constraint(equalTo: imageView.safeAreaLayoutGuide.trailingAnchor),
+                view.bottomAnchor.constraint(equalTo: imageView.safeAreaLayoutGuide.bottomAnchor),
+                view.leadingAnchor.constraint(equalTo: imageView.safeAreaLayoutGuide.leadingAnchor)
             ]
         } else {
             imageViewConstraints = [
