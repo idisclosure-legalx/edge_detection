@@ -14,6 +14,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  ScanResult _data;
   String _croppedImagePath = 'Unknown';
   String _originalImagePath = 'Unknown';
   List<Point<double>> _quadrilateral = [];
@@ -27,20 +28,43 @@ class _MyAppState extends State<MyApp> {
   Future<void> scan() async {
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
-      final data = await EdgeDetection.detectEdge;
+      var data = await EdgeDetection.detectEdge;
       if (data == null) return;
-      _croppedImagePath = data.croppedImagePath;
-      _originalImagePath = data.originalImagePath;
+      _data = data;
+      _croppedImagePath = _data.croppedImagePath;
+      _originalImagePath = _data.originalImagePath;
       _quadrilateral = [
-        data.quadrilateral.topLeft,
-        data.quadrilateral.topRight,
-        data.quadrilateral.bottomRight,
-        data.quadrilateral.bottomLeft,
+        _data.quadrilateral.topLeft,
+        _data.quadrilateral.topRight,
+        _data.quadrilateral.bottomRight,
+        _data.quadrilateral.bottomLeft,
       ];
 
       // If the widget was removed from the tree while the asynchronous platform
       // message was in flight, we want to discard the reply rather than calling
       // setState to update our non-existent appearance.
+      if (!mounted) return;
+
+      setState(() {});
+    } on PlatformException {
+      _croppedImagePath = 'Failed to get cropped image path.';
+    }
+  }
+
+  Future<void> adjust() async {
+    try {
+      var data = await EdgeDetection.adjustCropping(_data);
+      if (data == null) return;
+      _data = data;
+      _croppedImagePath = _data.croppedImagePath;
+      _originalImagePath = _data.originalImagePath;
+      _quadrilateral = [
+        _data.quadrilateral.topLeft,
+        _data.quadrilateral.topRight,
+        _data.quadrilateral.bottomRight,
+        _data.quadrilateral.bottomLeft,
+      ];
+
       if (!mounted) return;
 
       setState(() {});
@@ -80,6 +104,17 @@ class _MyAppState extends State<MyApp> {
                   ),
                 ],
               ),
+              _data != null
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          onPressed: adjust,
+                          child: Text("Adjust"),
+                        ),
+                      ],
+                    )
+                  : Container(),
             ],
           ),
         ),
