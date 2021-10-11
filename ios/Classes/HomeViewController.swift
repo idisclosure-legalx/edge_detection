@@ -2,13 +2,14 @@ import Flutter
 import Foundation
 
 class HomeViewController: UIViewController, ImageScannerControllerDelegate {
-    var _result:FlutterResult?
-
+    var _image: UIImage?
+    var _quad: Quadrilateral?
+    var _result: FlutterResult?
+    
     override func viewDidAppear(_ animated: Bool) {       
 
-        
         if self.isBeingPresented {
-            let scannerVC = ImageScannerController(canSelect: true, delegate: self)
+            let scannerVC = ImageScannerController(canSelect: true, image: _image, quad: _quad, delegate: self)
             if #available(iOS 13.0, *) {
                 scannerVC.isModalInPresentation = true
             }

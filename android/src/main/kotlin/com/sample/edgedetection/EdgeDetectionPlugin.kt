@@ -30,8 +30,10 @@ class EdgeDetectionPlugin(private val registrar: Registrar, private val delegate
       return
     }
     else if (call.method.equals("edge_detect")) {
-      delegate.OpenCameraActivity(call, result)
-    }else {
+      delegate.openCameraActivity(call, result)
+    } else if (call.method.equals("edge_adjust")) {
+      delegate.openCroppingActivity(call, result)
+    } else {
       result.notImplemented()
     }
   }

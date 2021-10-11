@@ -43,6 +43,8 @@ public protocol ImageScannerControllerDelegate: NSObjectProtocol {
 public final class ImageScannerController: UINavigationController, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
     private var canSelectPhoto: Bool = false
+    private var image: UIImage?
+    private var quad: Quadrilateral?
     
     /// The object that acts as the delegate of the `ImageScannerController`.
     public weak var imageScannerDelegate: ImageScannerControllerDelegate?
@@ -62,7 +64,12 @@ public final class ImageScannerController: UINavigationController, UIImagePicker
         return .portrait
     }
     
-    public required init(canSelect: Bool? = false, image: UIImage? = nil, delegate: ImageScannerControllerDelegate? = nil) {
+    public required init(
+        canSelect: Bool? = false,
+        image: UIImage? = nil,
+        quad: Quadrilateral? = nil,
+        delegate: ImageScannerControllerDelegate? = nil) {
+        
         super.init(rootViewController: ScannerViewController(canSelectPhoto: canSelect!))
         
         self.canSelectPhoto = canSelect!;
@@ -77,6 +84,12 @@ public final class ImageScannerController: UINavigationController, UIImagePicker
         navigationBar.isTranslucent = false
         self.view.addSubview(blackFlashView)
         setupConstraints()
+        
+        if let image = image, let quad = quad {
+            let editViewController = EditScanViewController(image: image, quad: quad, rotateImage: false)
+            setViewControllers([editViewController], animated: true)
+            return
+        }
         
         // If an image was passed in by the host app (e.g. picked from the photo library), use it instead of the document scanner.
         if let image = image {
