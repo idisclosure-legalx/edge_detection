@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.media.ExifInterface
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.view.Display
@@ -30,11 +31,16 @@ import java.io.IOException
 import java.io.InputStream
 
 class ScanActivity : BaseActivity(), IScanView.Proxy {
+    var manualCropping: Boolean = false
 
     private val REQUEST_CAMERA_PERMISSION = 0
 
     private lateinit var mPresenter: ScanPresenter
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        manualCropping = intent.getBooleanExtra("manual_cropping", false)
+        super.onCreate(savedInstanceState)
+    }
 
     override fun provideContentViewId(): Int = R.layout.activity_scan
 

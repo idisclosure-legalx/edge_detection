@@ -13,10 +13,10 @@ import android.os.Build
 import android.util.Log
 import android.view.SurfaceHolder
 import android.widget.Toast
-import com.sample.edgedetection.SCAN_REQUEST_CODE
-import com.sample.edgedetection.SourceManager
+import com.sample.edgedetection.*
 import com.sample.edgedetection.crop.CropActivity
 import com.sample.edgedetection.processor.Corners
+import com.sample.edgedetection.processor.getCroppedImageData
 import com.sample.edgedetection.processor.processPicture
 import io.reactivex.Observable
 import io.reactivex.Scheduler
@@ -138,13 +138,6 @@ class ScanPresenter constructor(private val context: Context, private val iView:
         mCamera?.setDisplayOrientation(90)
     }
 
-    fun detectEdge(pic: Mat) {
-        SourceManager.corners = processPicture(pic)
-        Imgproc.cvtColor(pic, pic, Imgproc.COLOR_RGB2BGRA)
-        SourceManager.pic = pic
-        (context as Activity)?.startActivityForResult(Intent(context, CropActivity::class.java),SCAN_REQUEST_CODE)
-    }
-
     override fun surfaceCreated(p0: SurfaceHolder?) {
         initCamera()
     }
@@ -241,6 +234,40 @@ class ScanPresenter constructor(private val context: Context, private val iView:
             else -> -1
         }
     })
+
+    fun detectEdge(pic: Mat) {
+        val corners = processPicture(pic)
+        var cornerPoints = corners?.corners
+        if (cornerPoints == null) {
+            val size = pic.size()
+            cornerPoints = listOf(
+                org.opencv.core.Point(size.width * 0.05, size.height * 0.05),
+                org.opencv.core.Point(size.width * 0.95, size.height * 0.05),
+                org.opencv.core.Point(size.width * 0.95, size.height * 0.95),
+                org.opencv.core.Point(size.width * 0.05, size.height * 0.95)
+            )
+        }
+        Imgproc.cvtColor(pic, pic, Imgproc.COLOR_RGB2BGRA)
+        SourceManager.pic = pic
+        SourceManager.corners = corners
+
+        if ((context as ScanActivity)?.manualCropping) {
+            (context as Activity)?.startActivityForResult(Intent(context, CropActivity::class.java),SCAN_REQUEST_CODE)
+            return
+        }
+
+        val data = getCroppedImageData(pic, cornerPoints, context.cacheDir)
+        val quad = data!![QUADRILATERAL] as Array<DoubleArray>
+        var intent = Intent()
+        intent.putExtra(CROPPED_IMAGE_PATH, data!![CROPPED_IMAGE_PATH] as String)
+        intent.putExtra(ORIGINAL_IMAGE_PATH, data!![ORIGINAL_IMAGE_PATH] as String)
+        intent.putExtra(QUADRILATERAL_TOP_LEFT, quad[0])
+        intent.putExtra(QUADRILATERAL_TOP_RIGHT, quad[1])
+        intent.putExtra(QUADRILATERAL_BOTTOM_RIGHT, quad[2])
+        intent.putExtra(QUADRILATERAL_BOTTOM_LEFT, quad[3])
+        (context as Activity)?.setResult(Activity.RESULT_OK, intent)
+        context?.finish()
+    }
 
 
 }
