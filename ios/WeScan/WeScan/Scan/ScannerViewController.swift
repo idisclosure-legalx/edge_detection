@@ -344,14 +344,54 @@ extension ScannerViewController: RectangleDetectionDelegateProtocol {
         shutterButton.isUserInteractionEnabled = false
     }
     
-    func captureSessionManager(_ captureSessionManager: CaptureSessionManager, didCapturePicture picture: UIImage, withQuad quad: Quadrilateral?) {
+    func captureSessionManager(_ captureSessionManager: CaptureSessionManager, didCapturePicture picture: UIImage, withQuad detectedQuad: Quadrilateral?) {
         activityIndicator.stopAnimating()
         
         selectPhotoButton.isHidden = true
         
-        let editVC = EditScanViewController(image: picture, quad: quad)
-        navigationController?.pushViewController(editVC, animated: false)
+        guard let imageScannerController = navigationController as? ImageScannerController else { return }
         
+        var quad = detectedQuad
+        if (quad == nil) {
+            let topLeft = CGPoint(x: picture.size.width * 0.05, y: picture.size.height * 0.05)
+            let topRight = CGPoint(x: picture.size.width * 0.95, y: picture.size.height * 0.05)
+            let bottomRight = CGPoint(x: picture.size.width * 0.95, y: picture.size.height * 0.95)
+            let bottomLeft = CGPoint(x: picture.size.width * 0.05, y: picture.size.height * 0.95)
+            
+            quad = Quadrilateral(topLeft: topLeft, topRight: topRight, bottomRight: bottomRight, bottomLeft: bottomLeft)
+        }
+        guard let quad = quad,
+            let ciImage = CIImage(image: picture) else {
+                if let imageScannerController = navigationController as? ImageScannerController {
+                    let error = ImageScannerControllerError.ciImageCreation
+                    imageScannerController.imageScannerDelegate?.imageScannerController(imageScannerController, didFailWithError: error)
+                }
+                return
+        }
+        let cgOrientation = CGImagePropertyOrientation(picture.imageOrientation)
+        let orientedImage = ciImage.oriented(forExifOrientation: Int32(cgOrientation.rawValue))
+        let scaledQuad = detectedQuad ?? quad
+        
+        // Cropped Image
+        var cartesianScaledQuad = scaledQuad.toCartesian(withHeight: picture.size.height)
+        cartesianScaledQuad.reorganize()
+        
+        let filteredImage = orientedImage.applyingFilter("CIPerspectiveCorrection", parameters: [
+            "inputTopLeft": CIVector(cgPoint: cartesianScaledQuad.bottomLeft),
+            "inputTopRight": CIVector(cgPoint: cartesianScaledQuad.bottomRight),
+            "inputBottomLeft": CIVector(cgPoint: cartesianScaledQuad.topLeft),
+            "inputBottomRight": CIVector(cgPoint: cartesianScaledQuad.topRight)
+        ])
+        
+        let croppedImage = UIImage.from(ciImage: filteredImage)
+        // Enhanced Image
+        let enhancedImage = filteredImage.applyingAdaptiveThreshold()?.withFixedOrientation()
+        let enhancedScan = enhancedImage.flatMap { ImageScannerScan(image: $0) }
+        
+        let results = ImageScannerResults(detectedRectangle: scaledQuad, originalScan: ImageScannerScan(image: picture), croppedScan: ImageScannerScan(image: croppedImage), enhancedScan: enhancedScan)
+        
+        imageScannerController.imageScannerDelegate?.imageScannerController(imageScannerController, didFinishScanningWithResults: results)
+       
         shutterButton.isUserInteractionEnabled = true
     }
     

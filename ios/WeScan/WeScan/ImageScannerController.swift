@@ -136,10 +136,45 @@ public final class ImageScannerController: UINavigationController, UIImagePicker
         
         detect(image: image) { [weak self] detectedQuad in
             guard let self = self else { return }
-            (self.topViewController as! ScannerViewController).cleanup()
             
-            let editViewController = EditScanViewController(image: image, quad: detectedQuad, rotateImage: false)
-            self.setViewControllers([editViewController], animated: false)
+            var quad = detectedQuad
+            if (quad == nil) {
+                let topLeft = CGPoint(x: image.size.width * 0.05, y: image.size.height * 0.05)
+                let topRight = CGPoint(x: image.size.width * 0.95, y: image.size.height * 0.05)
+                let bottomRight = CGPoint(x: image.size.width * 0.95, y: image.size.height * 0.95)
+                let bottomLeft = CGPoint(x: image.size.width * 0.05, y: image.size.height * 0.95)
+                
+                quad = Quadrilateral(topLeft: topLeft, topRight: topRight, bottomRight: bottomRight, bottomLeft: bottomLeft)
+            }
+            guard let quad = quad,
+                let ciImage = CIImage(image: image) else {
+                    let error = ImageScannerControllerError.ciImageCreation
+                    self.imageScannerDelegate?.imageScannerController(self, didFailWithError: error)
+                    return
+            }
+            let cgOrientation = CGImagePropertyOrientation(image.imageOrientation)
+            let orientedImage = ciImage.oriented(forExifOrientation: Int32(cgOrientation.rawValue))
+            let scaledQuad = detectedQuad ?? quad
+            
+            // Cropped Image
+            var cartesianScaledQuad = scaledQuad.toCartesian(withHeight: image.size.height)
+            cartesianScaledQuad.reorganize()
+            
+            let filteredImage = orientedImage.applyingFilter("CIPerspectiveCorrection", parameters: [
+                "inputTopLeft": CIVector(cgPoint: cartesianScaledQuad.bottomLeft),
+                "inputTopRight": CIVector(cgPoint: cartesianScaledQuad.bottomRight),
+                "inputBottomLeft": CIVector(cgPoint: cartesianScaledQuad.topLeft),
+                "inputBottomRight": CIVector(cgPoint: cartesianScaledQuad.topRight)
+            ])
+            
+            let croppedImage = UIImage.from(ciImage: filteredImage)
+            // Enhanced Image
+            let enhancedImage = filteredImage.applyingAdaptiveThreshold()?.withFixedOrientation()
+            let enhancedScan = enhancedImage.flatMap { ImageScannerScan(image: $0) }
+            
+            let results = ImageScannerResults(detectedRectangle: scaledQuad, originalScan: ImageScannerScan(image: image), croppedScan: ImageScannerScan(image: croppedImage), enhancedScan: enhancedScan)
+            
+            self.imageScannerDelegate?.imageScannerController(self, didFinishScanningWithResults: results)
         }
     }
     
