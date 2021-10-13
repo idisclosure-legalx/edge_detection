@@ -18,17 +18,14 @@ import androidx.core.app.ActivityCompat
 import com.sample.edgedetection.CROPPED_IMAGE_PATH
 import com.sample.edgedetection.ORIGINAL_IMAGE_PATH
 import com.sample.edgedetection.QUADRILATERAL
+import com.sample.edgedetection.processor.getCroppedImageData
 
 
 const val IMAGES_DIR = "smart_scanner"
 
 class CropPresenter(val context: Context, private val iCropView: ICropView.Proxy) {
     private val picture: Mat? = SourceManager.pic
-    private var pictureBitmap: Bitmap? = null
-
     private val corners: Corners? = SourceManager.corners
-    private var croppedPicture: Mat? = null
-    private var croppedBitmap: Bitmap? = null
 
     init {
         val bitmap = Bitmap.createBitmap(picture?.width() ?: 1080, picture?.height()
@@ -44,51 +41,7 @@ class CropPresenter(val context: Context, private val iCropView: ICropView.Proxy
             return null
         }
 
-        pictureBitmap = Bitmap.createBitmap(picture!!.width(), picture!!.height(), Bitmap.Config.ARGB_8888)
-        Utils.matToBitmap(picture, pictureBitmap)
-
         val cornerPoints = iCropView.getPaperRect().getCorners2Crop()
-        croppedPicture = cropPicture(picture!!, cornerPoints)
-        croppedBitmap = Bitmap.createBitmap(croppedPicture!!.width(), croppedPicture!!.height(), Bitmap.Config.ARGB_8888)
-        Utils.matToBitmap(croppedPicture, croppedBitmap)
-
-        val dir = File(context.cacheDir, IMAGES_DIR)
-        if (!dir.exists()) {
-            dir.mkdirs()
-        }
-
-        val cropPic = croppedBitmap
-        var croppedImagePath = ""
-        if (null != cropPic) {
-            val file = File.createTempFile("crop_${SystemClock.currentThreadTimeMillis()}", ".jpeg", dir)
-            file.deleteOnExit()
-            val outStream = FileOutputStream(file)
-            cropPic.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
-            outStream.flush()
-            outStream.close()
-            cropPic.recycle()
-
-            croppedImagePath = file.absolutePath
-        }
-
-        val origPic = pictureBitmap
-        var originalImagePath = ""
-        if (null != cropPic) {
-            val file = File.createTempFile("orig_${SystemClock.currentThreadTimeMillis()}", ".jpeg", dir)
-            file.deleteOnExit()
-            val outStream = FileOutputStream(file)
-            origPic!!.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
-            outStream.flush()
-            outStream.close()
-            origPic!!.recycle()
-
-            originalImagePath = file.absolutePath
-        }
-
-        return mapOf(
-                CROPPED_IMAGE_PATH to croppedImagePath,
-                ORIGINAL_IMAGE_PATH to originalImagePath,
-                QUADRILATERAL to cornerPoints.map { point -> arrayOf(point.x, point.y).toDoubleArray() }.toTypedArray()
-        )
+        return getCroppedImageData(picture!!, cornerPoints, context.cacheDir)
     }
 }

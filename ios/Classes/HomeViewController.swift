@@ -25,19 +25,20 @@ class HomeViewController: UIViewController, ImageScannerControllerDelegate {
 
     func imageScannerController(_ scanner: ImageScannerController, didFinishScanningWithResults results: ImageScannerResults) {
         // Your ViewController is responsible for dismissing the ImageScannerController
-        scanner.dismiss(animated: true)
-        
-        let croppedImagePath = saveImage(image:results.croppedScan.image)
-        let originalImagePath = saveImage(image: results.originalScan.image)
-        _result!([
-            "cropped_image_path": croppedImagePath!,
-            "original_image_path": originalImagePath!,
-            "quadrilateral_top_left": [results.detectedRectangle.topLeft.x, results.detectedRectangle.topLeft.y],
-            "quadrilateral_top_right": [results.detectedRectangle.topRight.x, results.detectedRectangle.topRight.y],
-            "quadrilateral_bottom_right": [results.detectedRectangle.bottomRight.x, results.detectedRectangle.bottomRight.y],
-            "quadrilateral_bottom_left": [results.detectedRectangle.bottomLeft.x, results.detectedRectangle.bottomLeft.y]
-        ])
-        self.dismiss(animated: true)
+        scanner.dismiss(animated: true) {
+            let croppedImagePath = self.saveImage(image:results.croppedScan.image)
+            let originalImagePath = self.saveImage(image: results.originalScan.image)
+            self._result!([
+                "cropped_image_path": croppedImagePath!,
+                "original_image_path": originalImagePath!,
+                "quadrilateral_top_left": [results.detectedRectangle.topLeft.x, results.detectedRectangle.topLeft.y],
+                "quadrilateral_top_right": [results.detectedRectangle.topRight.x, results.detectedRectangle.topRight.y],
+                "quadrilateral_bottom_right": [results.detectedRectangle.bottomRight.x, results.detectedRectangle.bottomRight.y],
+                "quadrilateral_bottom_left": [results.detectedRectangle.bottomLeft.x, results.detectedRectangle.bottomLeft.y]
+            ])
+            
+            self.dismiss(animated: true)
+        }
     }
     
 

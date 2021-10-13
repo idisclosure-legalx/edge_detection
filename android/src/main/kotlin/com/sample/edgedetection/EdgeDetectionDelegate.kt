@@ -64,8 +64,15 @@ class EdgeDetectionDelegate(activity: Activity) : PluginRegistry.ActivityResultL
             return
         }
 
-        var intent = Intent(Intent(activity.applicationContext, ScanActivity::class.java))
-        activity.startActivityForResult(intent,SCAN_REQUEST_CODE)
+        val intent = Intent(Intent(activity.applicationContext, ScanActivity::class.java))
+        val args = call.arguments as HashMap<String, Any>?
+        if (args != null) {
+            val manualCropping = args["manual_cropping"] as Boolean?
+            if (manualCropping != null) {
+                intent.putExtra("manual_cropping", manualCropping)
+            }
+        }
+        activity.startActivityForResult(intent, SCAN_REQUEST_CODE)
     }
 
     @SuppressLint("NewApi")

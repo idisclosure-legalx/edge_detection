@@ -1,10 +1,21 @@
 package com.sample.edgedetection.processor
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.os.SystemClock
 import android.util.Log
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import com.sample.edgedetection.CROPPED_IMAGE_PATH
+import com.sample.edgedetection.ORIGINAL_IMAGE_PATH
+import com.sample.edgedetection.QUADRILATERAL
+import com.sample.edgedetection.crop.IMAGES_DIR
 import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
+import java.io.File
+import java.io.FileOutputStream
 import kotlin.collections.ArrayList
 
 const val TAG: String = "PaperProcessor"
@@ -12,6 +23,58 @@ const val TAG: String = "PaperProcessor"
 fun processPicture(previewFrame: Mat): Corners? {
     val contours = findContours(previewFrame)
     return getCorners(contours, previewFrame.size())
+}
+
+fun getCroppedImageData(
+        picture: Mat,
+        cornerPoints: List<Point>,
+        fileDir: File): Map<String, Any>? {
+
+    val pictureBitmap = Bitmap.createBitmap(picture!!.width(), picture!!.height(), Bitmap.Config.ARGB_8888)
+    Utils.matToBitmap(picture, pictureBitmap)
+
+    val croppedPicture = cropPicture(picture!!, cornerPoints)
+    val croppedBitmap = Bitmap.createBitmap(croppedPicture!!.width(), croppedPicture!!.height(), Bitmap.Config.ARGB_8888)
+    Utils.matToBitmap(croppedPicture, croppedBitmap)
+
+    val dir = File(fileDir, IMAGES_DIR)
+    if (!dir.exists()) {
+        dir.mkdirs()
+    }
+
+    val cropPic = croppedBitmap
+    var croppedImagePath = ""
+    if (null != cropPic) {
+        val file = File.createTempFile("crop_${SystemClock.currentThreadTimeMillis()}", ".jpeg", dir)
+        file.deleteOnExit()
+        val outStream = FileOutputStream(file)
+        cropPic.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
+        outStream.flush()
+        outStream.close()
+        cropPic.recycle()
+
+        croppedImagePath = file.absolutePath
+    }
+
+    val origPic = pictureBitmap
+    var originalImagePath = ""
+    if (null != origPic) {
+        val file = File.createTempFile("orig_${SystemClock.currentThreadTimeMillis()}", ".jpeg", dir)
+        file.deleteOnExit()
+        val outStream = FileOutputStream(file)
+        origPic!!.compress(Bitmap.CompressFormat.JPEG, 100, outStream)
+        outStream.flush()
+        outStream.close()
+        origPic!!.recycle()
+
+        originalImagePath = file.absolutePath
+    }
+
+    return mapOf(
+            CROPPED_IMAGE_PATH to croppedImagePath,
+            ORIGINAL_IMAGE_PATH to originalImagePath,
+            QUADRILATERAL to cornerPoints.map { point -> arrayOf(point.x, point.y).toDoubleArray() }.toTypedArray()
+    )
 }
 
 fun cropPicture(picture: Mat, pts: List<Point>): Mat {
@@ -113,8 +176,6 @@ private fun getCorners(contours: ArrayList<MatOfPoint>, size: Size): Corners? {
                 if (foundPoints.size < 4) return null
                 return Corners(foundPoints, size)
             }
-        } else {
-            return null
         }
     }
 
