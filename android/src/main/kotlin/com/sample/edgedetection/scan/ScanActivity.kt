@@ -67,8 +67,14 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
         }
 
         gallery.setOnClickListener {
-            val gallery = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
-            ActivityCompat.startActivityForResult(this, gallery, PICK_IMAGE_REQUEST_CODE, null);
+            val pickImageIntent = Intent(Intent.ACTION_GET_CONTENT)
+            pickImageIntent.type = "image/*"
+
+            ActivityCompat.startActivityForResult(
+                    this,
+                    pickImageIntent,
+                    PICK_IMAGE_REQUEST_CODE,
+                    null)
         };
     }
 
@@ -138,7 +144,7 @@ class ScanActivity : BaseActivity(), IScanView.Proxy {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
 
-        if(item.itemId == android.R.id.home){
+        if (item.itemId == android.R.id.home) {
             onBackPressed()
             return true
         }
