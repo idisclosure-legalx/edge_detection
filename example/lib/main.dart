@@ -14,9 +14,9 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  ScanResult _data;
-  String _croppedImagePath = 'Unknown';
-  String _originalImagePath = 'Unknown';
+  ScanResult? _data;
+  String? _croppedImagePath = 'Unknown';
+  String? _originalImagePath = 'Unknown';
   List<Point<double>> _quadrilateral = [];
 
   @override
@@ -31,13 +31,13 @@ class _MyAppState extends State<MyApp> {
       var data = await EdgeDetection.detectEdge;
       if (data == null) return;
       _data = data;
-      _croppedImagePath = _data.croppedImagePath;
-      _originalImagePath = _data.originalImagePath;
+      _croppedImagePath = _data!.croppedImagePath;
+      _originalImagePath = _data!.originalImagePath;
       _quadrilateral = [
-        _data.quadrilateral.topLeft,
-        _data.quadrilateral.topRight,
-        _data.quadrilateral.bottomRight,
-        _data.quadrilateral.bottomLeft,
+        _data!.quadrilateral.topLeft,
+        _data!.quadrilateral.topRight,
+        _data!.quadrilateral.bottomRight,
+        _data!.quadrilateral.bottomLeft,
       ];
 
       // If the widget was removed from the tree while the asynchronous platform
@@ -53,16 +53,16 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> adjust() async {
     try {
-      var data = await EdgeDetection.adjustCropping(_data);
+      var data = await EdgeDetection.adjustCropping(_data!);
       if (data == null) return;
       _data = data;
-      _croppedImagePath = _data.croppedImagePath;
-      _originalImagePath = _data.originalImagePath;
+      _croppedImagePath = _data!.croppedImagePath;
+      _originalImagePath = _data!.originalImagePath;
       _quadrilateral = [
-        _data.quadrilateral.topLeft,
-        _data.quadrilateral.topRight,
-        _data.quadrilateral.bottomRight,
-        _data.quadrilateral.bottomLeft,
+        _data!.quadrilateral.topLeft,
+        _data!.quadrilateral.topRight,
+        _data!.quadrilateral.bottomRight,
+        _data!.quadrilateral.bottomLeft,
       ];
 
       if (!mounted) return;
@@ -87,10 +87,10 @@ class _MyAppState extends State<MyApp> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Cropped image path:'),
-              Text(_croppedImagePath),
+              Text(_croppedImagePath!),
               Container(height: 8),
               Text('Original image path:'),
-              Text(_originalImagePath),
+              Text(_originalImagePath!),
               Container(height: 8),
               Text('Quadrilateral:'),
               Text(_quadrilateral.toString()),

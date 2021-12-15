@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 class EdgeDetection {
   static const MethodChannel _channel = const MethodChannel('edge_detection');
 
-  static Future<ScanResult> get detectEdge async {
+  static Future<ScanResult?> get detectEdge async {
     final data = await _channel.invokeMethod('edge_detect');
     if (data == null ||
         data['cropped_image_path'] == null ||
@@ -39,7 +39,7 @@ class EdgeDetection {
     return result;
   }
 
-  static Future<ScanResult> adjustCropping(ScanResult input) async {
+  static Future<ScanResult?> adjustCropping(ScanResult input) async {
     final data = await _channel.invokeMethod('edge_adjust', {
       'original_image_path': input.originalImagePath,
       'quadrilateral_top_left': [
@@ -92,14 +92,14 @@ class EdgeDetection {
 }
 
 class ScanResult {
-  String croppedImagePath;
-  String originalImagePath;
-  Quadrilateral quadrilateral;
+  String? croppedImagePath;
+  String? originalImagePath;
+  late Quadrilateral quadrilateral;
 }
 
 class Quadrilateral {
-  Point<double> topLeft;
-  Point<double> topRight;
-  Point<double> bottomRight;
-  Point<double> bottomLeft;
+  late Point<double> topLeft;
+  late Point<double> topRight;
+  late Point<double> bottomRight;
+  late Point<double> bottomLeft;
 }
